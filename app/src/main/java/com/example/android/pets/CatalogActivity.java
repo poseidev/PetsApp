@@ -70,7 +70,11 @@ public class CatalogActivity extends AppCompatActivity {
 
         // Perform this raw SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
-        String[] projection = {PetEntry._ID};
+        String[] projection = {PetEntry._ID,
+                PetEntry.COLUMN_PET_NAME,
+                PetEntry.COLUMN_PET_BREED,
+                PetEntry.COLUMN_PET_GENDER,
+                PetEntry.COLUMN_PET_WEIGHT};
 
         Cursor cursor = db.query(PetEntry.TABLE_NAME,
                 projection,
@@ -84,7 +88,29 @@ public class CatalogActivity extends AppCompatActivity {
             // Display the number of rows in the Cursor (which reflects the number of rows in the
             // pets table in the database).
             TextView displayView = findViewById(R.id.text_view_pet);
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount());
+            displayView.setText("Number of rows in pets database table: " + cursor.getCount() + "\n");
+
+            displayView.append(PetEntry._ID + "\t" +
+                    PetEntry.COLUMN_PET_NAME + "\t" +
+                    PetEntry.COLUMN_PET_BREED + "\t" +
+                    PetEntry.COLUMN_PET_GENDER + "\t" +
+                    PetEntry.COLUMN_PET_WEIGHT + "\n");
+
+            int idColumnIndex = cursor.getColumnIndex(PetEntry._ID);
+            int nameColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_NAME);
+            int breedColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_BREED);
+            int genderColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_GENDER);
+            int weightColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT);
+
+
+            while(cursor.moveToNext()) {
+                displayView.append(cursor.getInt(idColumnIndex) + "\t" +
+                        cursor.getString(nameColumnIndex) + "\t" +
+                        cursor.getString(breedColumnIndex) + "\t" +
+                        cursor.getString(genderColumnIndex) + "\t" +
+                        cursor.getInt(weightColumnIndex) +
+                        "\n" );
+            }
 
         } finally {
             // Always close the cursor when you're done reading from it. This releases all its
