@@ -64,10 +64,10 @@ public class EditorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_editor);
 
         // Find all relevant views that we will need to read user input from
-        mNameEditText = (EditText) findViewById(R.id.edit_pet_name);
-        mBreedEditText = (EditText) findViewById(R.id.edit_pet_breed);
-        mWeightEditText = (EditText) findViewById(R.id.edit_pet_weight);
-        mGenderSpinner = (Spinner) findViewById(R.id.spinner_gender);
+        mNameEditText = findViewById(R.id.edit_pet_name);
+        mBreedEditText = findViewById(R.id.edit_pet_breed);
+        mWeightEditText = findViewById(R.id.edit_pet_weight);
+        mGenderSpinner = findViewById(R.id.spinner_gender);
 
         setupSpinner();
     }
@@ -133,7 +133,7 @@ public class EditorActivity extends AppCompatActivity {
             PetDbHelper petDbHelper = new PetDbHelper(this);
             SQLiteDatabase db = petDbHelper.getWritableDatabase();
 
-            newId = db.insert(PetContract.PetEntry.TABLE_NAME, null, values);
+            newId = db.insert(PetContract.TABLE_NAME, null, values);
 
             if(newId > 0) {
                 Toast.makeText(this, "Pet saved with id: " + String.valueOf(newId), Toast.LENGTH_SHORT).show();

@@ -76,7 +76,7 @@ public class CatalogActivity extends AppCompatActivity {
                 PetEntry.COLUMN_PET_GENDER,
                 PetEntry.COLUMN_PET_WEIGHT};
 
-        Cursor cursor = db.query(PetEntry.TABLE_NAME,
+        Cursor cursor = db.query(PetContract.TABLE_NAME,
                 projection,
                 null,
                 null,
@@ -131,7 +131,7 @@ public class CatalogActivity extends AppCompatActivity {
         values.put(PetEntry.COLUMN_PET_GENDER, PetEntry.GENDER_MALE);
         values.put(PetEntry.COLUMN_PET_WEIGHT, 7);
 
-        long newId = db.insert(PetEntry.TABLE_NAME, null, values);
+        long newId = db.insert(PetContract.TABLE_NAME, null, values);
     }
 
     @Override
