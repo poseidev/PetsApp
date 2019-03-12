@@ -7,6 +7,8 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Log;
+
 
 public class PetProvider extends ContentProvider {
     /*
@@ -36,8 +38,8 @@ public class PetProvider extends ContentProvider {
         // when a match is found.
 
         // TODO: Add 2 content URIs to URI matcher
-        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.TABLE_NAME, PETS);
-        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.TABLE_NAME, PET_ID);
+        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PetEntry.TABLE_NAME, PETS);
+        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PetEntry.TABLE_NAME + "/#", PET_ID);
     }
 
     /**
@@ -74,7 +76,7 @@ public class PetProvider extends ContentProvider {
                 // could contain multiple rows of the pets table.
                 // TODO: Perform database query on pets table
                 cursor = database.query(
-                        PetContract.TABLE_NAME,
+                        PetContract.PetEntry.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -97,7 +99,7 @@ public class PetProvider extends ContentProvider {
                 // This will perform a query on the pets table where the _id equals 3 to return a
                 // Cursor containing that row of the table.
                 cursor = database.query(
-                        PetContract.TABLE_NAME,
+                        PetContract.PetEntry.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -113,11 +115,43 @@ public class PetProvider extends ContentProvider {
     }
 
     /**
+     * Insert a pet into the database with the given content values. Return the new content URI
+     * for that specific row in the database.
+     */
+    private Uri insertPet(Uri uri, ContentValues values) {
+        // Insert a new pet into the pets database table with the given ContentValues
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        long id = db.insert(
+                PetContract.PetEntry.TABLE_NAME,
+                null,
+                values);
+
+        if(id == -1)
+        {
+            Log.e(LOG_TAG, "Failed to insert row for " + uri);
+            return null;
+        }
+
+        // Once we know the ID of the new row in the table,
+        // return the new URI with the ID appended to the end of it
+        return ContentUris.withAppendedId(uri, id);
+    }
+
+    /**
      * Insert new data into the provider with the given ContentValues.
      */
     @Override
     public Uri insert(Uri uri, ContentValues contentValues) {
-        return null;
+        final int match = sUriMatcher.match(uri);
+
+        switch(match) {
+            case PETS:
+                return insertPet(uri, contentValues);
+
+            default:
+                throw new IllegalArgumentException("Insertion is not supported for " + uri + ".");
+        }
     }
 
     /**
