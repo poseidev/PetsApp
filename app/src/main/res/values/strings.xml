@@ -60,4 +60,7 @@
     <string name="gender_female">Female</string>
     <string name="insert_message">Pet saved</string>
     <string name="insert_error">Error with saving pet.</string>
+    <string name="error_pet_name_required">Pet requires a name.</string>
+    <string name="error_pet_gender_invalid">Pet requires a valid gender</string>
+    <string name="error_pet_weight_required">Pet weight is required.</string>
 </resources>
