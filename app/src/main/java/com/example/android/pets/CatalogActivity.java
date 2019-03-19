@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.android.pets.data.PetContract;
@@ -78,40 +79,13 @@ public class CatalogActivity extends AppCompatActivity {
                 null,
                 null);
 
-        try {
-            // Display the number of rows in the Cursor (which reflects the number of rows in the
-            // pets table in the database).
-            TextView displayView = findViewById(R.id.text_view_pet);
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount() + "\n");
+        ListView listView = findViewById(R.id.listContainer);
 
-            displayView.append(PetEntry._ID + "\t" +
-                    PetEntry.COLUMN_PET_NAME + "\t" +
-                    PetEntry.COLUMN_PET_BREED + "\t" +
-                    PetEntry.COLUMN_PET_GENDER + "\t" +
-                    PetEntry.COLUMN_PET_WEIGHT + "\n");
+        // Setup cursor adapter using cursor from last step
+        PetCursorAdapter cursorAdapter = new PetCursorAdapter(this, cursor);
 
-            int idColumnIndex = cursor.getColumnIndex(PetEntry._ID);
-            int nameColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_NAME);
-            int breedColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_BREED);
-            int genderColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_GENDER);
-            int weightColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT);
-
-
-            while(cursor.moveToNext()) {
-                displayView.append(cursor.getInt(idColumnIndex) + "\t" +
-                        cursor.getString(nameColumnIndex) + "\t" +
-                        cursor.getString(breedColumnIndex) + "\t" +
-                        cursor.getString(genderColumnIndex) + "\t" +
-                        cursor.getInt(weightColumnIndex) +
-                        "\n" );
-            }
-
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-
-            cursor.close();
-        }
+        // Attach cursor to adapter
+        listView.setAdapter(cursorAdapter);
     }
 
     private void insertPet()

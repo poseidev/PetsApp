@@ -18,11 +18,10 @@
     android:layout_height="match_parent"
     tools:context=".CatalogActivity">
 
-    <TextView
-        android:id="@+id/text_view_pet"
-        android:layout_width="match_parent"
+    <ListView
         android:layout_height="match_parent"
-        android:padding="@dimen/activity_margin"/>
+        android:layout_width="match_parent"
+        android:id="@+id/listContainer" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
