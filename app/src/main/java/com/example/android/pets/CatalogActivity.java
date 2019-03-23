@@ -4,7 +4,6 @@ package com.example.android.pets;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -13,21 +12,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
-
-import com.example.android.pets.data.PetDbHelper;
-import com.example.android.pets.data.PetProvider;
 
 
 /**
  * Displays list of pets that were entered and stored in the app.
  */
 public class CatalogActivity extends AppCompatActivity {
-
-    private PetDbHelper mDbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +37,10 @@ public class CatalogActivity extends AppCompatActivity {
             }
         });
 
-        mDbHelper = new PetDbHelper(this);
+        ListView listView = findViewById(R.id.listContainer);
 
-        displayDatabaseInfo();
+        View emptyView = findViewById(R.id.emptyView);
+        listView.setEmptyView(emptyView);
     }
 
     @Override
@@ -86,6 +79,7 @@ public class CatalogActivity extends AppCompatActivity {
 
         // Attach cursor to adapter
         listView.setAdapter(cursorAdapter);
+
     }
 
     private void insertPet()

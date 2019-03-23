@@ -63,4 +63,5 @@
     <string name="error_pet_name_required">Pet requires a name.</string>
     <string name="error_pet_gender_invalid">Pet requires a valid gender</string>
     <string name="error_pet_weight_required">Pet weight is required.</string>
+    <string name="emptyViewTitleText">It\'s a bit lonely here...</string>
 </resources>
