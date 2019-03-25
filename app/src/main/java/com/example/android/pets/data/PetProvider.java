@@ -115,7 +115,16 @@ public class PetProvider extends ContentProvider {
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
 
+        // Set notification URI on the Cursor,
+        // to determine what content URI the Cursor was created for.
+        // If URI data changes, cursor that needs update is identified.
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
         return cursor;
+    }
+
+    private void notifyDatabaseChange(Uri uri) {
+        getContext().getContentResolver().notifyChange(uri, null);
     }
 
     /**
@@ -154,6 +163,9 @@ public class PetProvider extends ContentProvider {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
         }
+
+        // Notify listeners of the URI data change
+        notifyDatabaseChange(uri);
 
         // Once we know the ID of the new row in the table,
         // return the new URI with the ID appended to the end of it
@@ -218,6 +230,10 @@ public class PetProvider extends ContentProvider {
                 selection,
                 selectionArgs);
 
+        // If any row is updated notify all listeners that URI data has changed
+        if(rowCount > 0) {
+            notifyDatabaseChange(uri);
+        }
         return rowCount;
     }
 
@@ -255,25 +271,39 @@ public class PetProvider extends ContentProvider {
 
         final int match  = sUriMatcher.match(uri);
 
+        int rowsDeletedCount;
+
         switch(match) {
             case PETS:
-                return database.delete(
+                notifyDatabaseChange(uri);
+
+                rowsDeletedCount = database.delete(
                         PetEntry.TABLE_NAME,
                         selection,
                         selectionArgs);
+                break;
 
             case PET_ID:
+                notifyDatabaseChange(uri);
                 selection = PetEntry._ID + "=?";
                 selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
-                return database.delete(
+
+                rowsDeletedCount = database.delete(
                         PetEntry.TABLE_NAME,
                         selection,
                         selectionArgs);
+                break;
 
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri + ".");
         }
 
+        // If there were deleted rows notify all listeners of the URI data change
+        if(rowsDeletedCount > 0) {
+            notifyDatabaseChange(uri);
+        }
+
+        return rowsDeletedCount;
     }
 
     /**
