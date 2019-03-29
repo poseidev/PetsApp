@@ -1,6 +1,7 @@
 package com.example.android.pets;
 
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.pets.data.PetContract.PetEntry;
@@ -51,7 +53,25 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         mCursorAdapter = new PetCursorAdapter(this, null);
         listView.setAdapter(mCursorAdapter);
 
-        //getSupportLoaderManager().initLoader(PET_LOADER, null, this); //with: @SuppressWarnings("deprecation")
+        // Setup item click listener
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long id) {
+                Intent intent = new Intent(CatalogActivity.this,
+                        EditorActivity.class);
+
+                // Represents the specific pet that was clicked on
+                // Append id onto {@link PetEntry#CONTENT_URI}
+                // Example URI - content://com.example.android.pets/pets/2
+                Uri uri = ContentUris.withAppendedId(PetEntry.CONTENT_URI, id);
+
+                // Set the URI on the data field of the intent
+                intent.setData(uri);
+
+                // Launch the {@link EditorActivity} to display the data for the current pet
+                startActivity(intent);
+            }
+        });
 
         LoaderManager.getInstance(this).initLoader(PET_LOADER, null, this);
     }
