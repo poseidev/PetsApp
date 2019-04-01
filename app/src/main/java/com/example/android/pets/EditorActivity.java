@@ -17,11 +17,14 @@ package com.example.android.pets;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.content.UriMatcher;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -34,13 +37,13 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.example.android.pets.data.PetContract;
-import com.example.android.pets.data.PetDbHelper;
+import com.example.android.pets.data.PetContract.PetEntry;
+
 
 /**
  * Allows user to create a new pet or edit an existing one.
  */
-public class EditorActivity extends AppCompatActivity {
+public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     /** EditText field to enter the pet's name */
     private EditText mNameEditText;
@@ -54,6 +57,12 @@ public class EditorActivity extends AppCompatActivity {
     /** EditText field to enter the pet's gender */
     private Spinner mGenderSpinner;
 
+    private static final int PET_LOADER = 0;
+
+    private Uri mCurrentUri;
+
+    PetCursorAdapter mCursorAdapter;
+
     /**
      * Gender of the pet. The possible values are:
      * 0 for unknown gender, 1 for male, 2 for female.
@@ -66,9 +75,9 @@ public class EditorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_editor);
 
         Intent intent = getIntent();
-        Uri currentUri = intent.getData();
+        mCurrentUri = intent.getData();
 
-        if(currentUri == null) {
+        if(mCurrentUri == null) {
             setTitle(getString(R.string.activity_title_add_pet));
         } else {
             setTitle(getString(R.string.activity_title_edit_pet));
@@ -80,7 +89,9 @@ public class EditorActivity extends AppCompatActivity {
         mWeightEditText = findViewById(R.id.edit_pet_weight);
         mGenderSpinner = findViewById(R.id.spinner_gender);
 
+        mCursorAdapter = new PetCursorAdapter(this, null);
 
+        LoaderManager.getInstance(this).initLoader(PET_LOADER, null, this);
 
         setupSpinner();
     }
@@ -107,11 +118,11 @@ public class EditorActivity extends AppCompatActivity {
                 String selection = (String) parent.getItemAtPosition(position);
                 if (!TextUtils.isEmpty(selection)) {
                     if (selection.equals(getString(R.string.gender_male))) {
-                        mGender = PetContract.PetEntry.GENDER_UNKNOWN; // Male
+                        mGender = PetEntry.GENDER_UNKNOWN; // Male
                     } else if (selection.equals(getString(R.string.gender_female))) {
-                        mGender = PetContract.PetEntry.GENDER_MALE; // Female
+                        mGender = PetEntry.GENDER_MALE; // Female
                     } else {
-                        mGender = PetContract.PetEntry.GENDER_FEMALE; // Unknown
+                        mGender = PetEntry.GENDER_FEMALE; // Unknown
                     }
                 }
             }
@@ -136,12 +147,12 @@ public class EditorActivity extends AppCompatActivity {
         try {
 
             ContentValues values = new ContentValues();
-            values.put(PetContract.PetEntry.COLUMN_PET_NAME, name);
-            values.put(PetContract.PetEntry.COLUMN_PET_BREED, breed);
-            values.put(PetContract.PetEntry.COLUMN_PET_GENDER, gender);
-            values.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, weight);
+            values.put(PetEntry.COLUMN_PET_NAME, name);
+            values.put(PetEntry.COLUMN_PET_BREED, breed);
+            values.put(PetEntry.COLUMN_PET_GENDER, gender);
+            values.put(PetEntry.COLUMN_PET_WEIGHT, weight);
 
-            Uri uri = getContentResolver().insert(PetContract.PetEntry.CONTENT_URI, values);
+            Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
 
             if(uri == null){
                 Toast.makeText(this, R.string.insert_error, Toast.LENGTH_SHORT).show();
@@ -189,5 +200,67 @@ public class EditorActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void displayPetDetails(Cursor cursor) {
+        if (cursor.moveToFirst() == false) { return; }
+
+        int nameColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_NAME);
+        int breedColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_BREED);
+        int genderColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_GENDER);
+        int weightColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT);
+
+        String name = cursor.getString(nameColumnIndex);
+        String breed = cursor.getString(breedColumnIndex);
+        int gender = cursor.getInt(genderColumnIndex);
+        int weight = cursor.getInt(weightColumnIndex);
+
+        mNameEditText.setText(name);
+        mBreedEditText.setText(breed);
+        mWeightEditText.setText(String.valueOf(weight));
+
+        mGenderSpinner.setSelection(gender);
+    }
+
+    private void clearPetFields()
+    {
+        mNameEditText.getText().clear();
+        mBreedEditText.getText().clear();
+        mWeightEditText.getText().clear();
+        mGenderSpinner.setSelection(0);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        String[] projection = {
+                PetEntry._ID,
+                PetEntry.COLUMN_PET_NAME,
+                PetEntry.COLUMN_PET_BREED,
+                PetEntry.COLUMN_PET_GENDER,
+                PetEntry.COLUMN_PET_WEIGHT};
+
+        return new CursorLoader(
+                this,
+                mCurrentUri,
+                projection,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+
+        mCursorAdapter.swapCursor(cursor);
+
+        displayPetDetails(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+        mCursorAdapter.swapCursor(null);
+
+        clearPetFields();
     }
 }
