@@ -206,7 +206,7 @@ public class PetProvider extends ContentProvider {
         }
 
         if(values.containsKey(PetEntry.COLUMN_PET_GENDER)) {
-            Integer gender = values.getAsInteger(PetEntry.COLUMN_PET_NAME);
+            Integer gender = values.getAsInteger(PetEntry.COLUMN_PET_GENDER);
             Boolean isValidGender = PetEntry.isValidGender(gender);
             if(gender == null || !isValidGender)
             {
@@ -215,7 +215,7 @@ public class PetProvider extends ContentProvider {
         }
 
         if(values.containsKey(PetEntry.COLUMN_PET_WEIGHT)) {
-            Integer weight = values.getAsInteger(PetEntry.COLUMN_PET_NAME);
+            Integer weight = values.getAsInteger(PetEntry.COLUMN_PET_WEIGHT);
             if(weight != null && weight < 0)
             {
                 throw new IllegalArgumentException(getContext().getString(R.string.error_pet_gender_invalid));

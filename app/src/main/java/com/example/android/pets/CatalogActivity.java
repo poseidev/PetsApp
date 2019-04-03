@@ -40,7 +40,10 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+                Intent intent = new Intent(
+                        CatalogActivity.this,
+                        EditorActivity.class);
+
                 startActivity(intent);
             }
         });

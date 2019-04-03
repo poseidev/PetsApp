@@ -15,6 +15,7 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.UriMatcher;
@@ -61,13 +62,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     private Uri mCurrentUri;
 
-    PetCursorAdapter mCursorAdapter;
-
     /**
      * Gender of the pet. The possible values are:
      * 0 for unknown gender, 1 for male, 2 for female.
      */
-    private int mGender = 0;
+    private int mGender = PetEntry.GENDER_UNKNOWN;
+
+    private static final UriMatcher sUriMatcher = new UriMatcher(android.content.UriMatcher.NO_MATCH);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +82,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             setTitle(getString(R.string.activity_title_add_pet));
         } else {
             setTitle(getString(R.string.activity_title_edit_pet));
+
+            LoaderManager.getInstance(this).initLoader(PET_LOADER, null, this);
         }
 
         // Find all relevant views that we will need to read user input from
@@ -88,10 +91,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mBreedEditText = findViewById(R.id.edit_pet_breed);
         mWeightEditText = findViewById(R.id.edit_pet_weight);
         mGenderSpinner = findViewById(R.id.spinner_gender);
-
-        mCursorAdapter = new PetCursorAdapter(this, null);
-
-        LoaderManager.getInstance(this).initLoader(PET_LOADER, null, this);
 
         setupSpinner();
     }
@@ -118,11 +117,11 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 String selection = (String) parent.getItemAtPosition(position);
                 if (!TextUtils.isEmpty(selection)) {
                     if (selection.equals(getString(R.string.gender_male))) {
-                        mGender = PetEntry.GENDER_UNKNOWN; // Male
+                        mGender = PetEntry.GENDER_MALE; // Male
                     } else if (selection.equals(getString(R.string.gender_female))) {
-                        mGender = PetEntry.GENDER_MALE; // Female
+                        mGender = PetEntry.GENDER_FEMALE; // Female
                     } else {
-                        mGender = PetEntry.GENDER_FEMALE; // Unknown
+                        mGender = PetEntry.GENDER_UNKNOWN; // Unknown
                     }
                 }
             }
@@ -135,14 +134,45 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         });
     }
 
+    private void saveNewPet(ContentValues values) {
+        Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
+
+        if(uri == null){
+            Toast.makeText(this, R.string.insert_error, Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(this, R.string.insert_message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updatePet(ContentValues values) {
+        Uri uri = mCurrentUri;
+
+        /*String selection = PetEntry._ID + "=?";
+        String[] selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };*/
+
+        int updatedRowCount = getContentResolver().update(
+                uri,
+                values,
+                null,
+                null);
+
+        if(updatedRowCount < 1){
+            Toast.makeText(this, "Error with updating pet.", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(this, "Pet updated.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /*
      * Get user input from editor and save new pet into database.
      */
-    private void insertPet() {
+    private void savePet() {
         String name = mNameEditText.getText().toString().trim();
         String breed = mBreedEditText.getText().toString().trim();
         int gender =  mGender;
-        int weight =  Integer.parseInt(mWeightEditText.getText().toString().trim());
+        String weight =  mWeightEditText.getText().toString().trim();
 
         try {
 
@@ -150,15 +180,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             values.put(PetEntry.COLUMN_PET_NAME, name);
             values.put(PetEntry.COLUMN_PET_BREED, breed);
             values.put(PetEntry.COLUMN_PET_GENDER, gender);
-            values.put(PetEntry.COLUMN_PET_WEIGHT, weight);
+            values.put(PetEntry.COLUMN_PET_WEIGHT, Integer.parseInt(weight));
 
-            Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
-
-            if(uri == null){
-                Toast.makeText(this, R.string.insert_error, Toast.LENGTH_SHORT).show();
+            if(mCurrentUri == null) {
+                saveNewPet(values);
             }
             else {
-                Toast.makeText(this, R.string.insert_message, Toast.LENGTH_SHORT).show();
+                updatePet(values);
             }
         }
         catch(Exception e) {
@@ -181,7 +209,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
                 // Save pet to database
-                insertPet();
+                savePet();
 
                 // Exit activity
                 finish();
@@ -250,16 +278,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-
-        mCursorAdapter.swapCursor(cursor);
+        if(cursor == null) {
+            return;
+        }
 
         displayPetDetails(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
-        mCursorAdapter.swapCursor(null);
 
         clearPetFields();
     }
