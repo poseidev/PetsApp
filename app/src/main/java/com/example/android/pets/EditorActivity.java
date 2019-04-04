@@ -134,7 +134,27 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         });
     }
 
-    private void saveNewPet(ContentValues values) {
+    private ContentValues getContentValues() {
+        ContentValues values = new ContentValues();
+
+        String name = mNameEditText.getText().toString().trim();
+        String breed = mBreedEditText.getText().toString().trim();
+        String weight =  mWeightEditText.getText().toString().trim();
+
+        int weightInt = TextUtils.isEmpty(weight) ? 0 : Integer.parseInt(weight);
+
+        int gender =  mGender;
+
+        values.put(PetEntry.COLUMN_PET_NAME, name);
+        values.put(PetEntry.COLUMN_PET_BREED, breed);
+        values.put(PetEntry.COLUMN_PET_GENDER, gender);
+        values.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
+
+        return values;
+    }
+
+    private void saveNewPet() {
+        ContentValues values = getContentValues();
         Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
 
         if(uri == null){
@@ -145,11 +165,10 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
-    private void updatePet(ContentValues values) {
+    private void updatePet() {
         Uri uri = mCurrentUri;
 
-        /*String selection = PetEntry._ID + "=?";
-        String[] selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };*/
+        ContentValues values = getContentValues();
 
         int updatedRowCount = getContentResolver().update(
                 uri,
@@ -165,29 +184,22 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    private Boolean isEmptyFields() {
+        String name = mNameEditText.getText().toString().trim();
+        String breed = mBreedEditText.getText().toString().trim();
+
+        return TextUtils.isEmpty(name) || TextUtils.isEmpty(breed);
+    }
+
     /*
      * Get user input from editor and save new pet into database.
      */
     private void savePet() {
-        String name = mNameEditText.getText().toString().trim();
-        String breed = mBreedEditText.getText().toString().trim();
-        int gender =  mGender;
-        String weight =  mWeightEditText.getText().toString().trim();
-
         try {
-
-            ContentValues values = new ContentValues();
-            values.put(PetEntry.COLUMN_PET_NAME, name);
-            values.put(PetEntry.COLUMN_PET_BREED, breed);
-            values.put(PetEntry.COLUMN_PET_GENDER, gender);
-            values.put(PetEntry.COLUMN_PET_WEIGHT, Integer.parseInt(weight));
-
-            if(mCurrentUri == null) {
-                saveNewPet(values);
+            if(mCurrentUri == null && !isEmptyFields()) {
+                saveNewPet();
             }
-            else {
-                updatePet(values);
-            }
+            else { updatePet(); }
         }
         catch(Exception e) {
             Log.e(EditorActivity.class.getSimpleName(), e.getMessage());
