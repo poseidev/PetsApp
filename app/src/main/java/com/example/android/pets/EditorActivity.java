@@ -94,6 +94,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         if(mCurrentUri == null) {
             setTitle(getString(R.string.activity_title_add_pet));
+
+            invalidateOptionsMenu();
         } else {
             setTitle(getString(R.string.activity_title_edit_pet));
 
@@ -316,6 +318,18 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        if(mCurrentUri == null) {
+            MenuItem menuItem = menu.findItem(R.id.action_delete);
+            menuItem.setVisible(false);
+        }
+
+        return true;
     }
 
     private void displayPetDetails(Cursor cursor) {
