@@ -17,6 +17,7 @@ package com.example.android.pets;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -26,11 +27,13 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -70,6 +73,17 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     private static final UriMatcher sUriMatcher = new UriMatcher(android.content.UriMatcher.NO_MATCH);
 
+    private boolean mIsUpdatedPet = false;
+
+    // Listens for any user touches on a View
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            mIsUpdatedPet = true;
+            return false;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +106,60 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mWeightEditText = findViewById(R.id.edit_pet_weight);
         mGenderSpinner = findViewById(R.id.spinner_gender);
 
+        mNameEditText.setOnTouchListener(mTouchListener);
+        mBreedEditText.setOnTouchListener(mTouchListener);
+        mWeightEditText.setOnTouchListener(mTouchListener);
+        mGenderSpinner.setOnTouchListener(mTouchListener);
+
         setupSpinner();
+    }
+
+    private void showUnsavedChangesDialog(DialogInterface.OnClickListener discardButtonClickListener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.message_discard);
+        builder.setPositiveButton(R.string.button_title_discard, discardButtonClickListener);
+        builder.setNegativeButton(R.string.button_title_keep_editing, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                if(dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!mIsUpdatedPet) {
+            super.onBackPressed();
+            return;
+        }
+
+        setPositiveButtonListener(false);
+    }
+
+    /**
+     * Create click listener for Up or Back button of the warning dialog during update
+     *
+     * @param isUpButton if set to false listener will be created for the Back button
+     */
+    private void setPositiveButtonListener(final boolean isUpButton) {
+        DialogInterface.OnClickListener discardButtonClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                if(isUpButton) {
+                    NavUtils.navigateUpFromSameTask(EditorActivity.this);
+                }
+                else {
+                    finish();
+                }
+            }
+        };
+
+        showUnsavedChangesDialog(discardButtonClickListener);
     }
 
     /**
@@ -235,9 +302,18 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
-                // Navigate back to parent activity (CatalogActivity)
-                NavUtils.navigateUpFromSameTask(this);
+                if(!mIsUpdatedPet) {
+                    // Navigate back to parent activity (CatalogActivity)
+                    NavUtils.navigateUpFromSameTask(EditorActivity.this);
+                    return true;
+                }
+
+                setPositiveButtonListener(true);
+
                 return true;
+
+            default:
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
