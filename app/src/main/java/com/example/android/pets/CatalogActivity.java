@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract.PetEntry;
 
@@ -90,6 +91,22 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
     }
 
+    private void deleteAllPets() {
+        int deletedRowsCount = getContentResolver().delete(PetEntry.CONTENT_URI,
+                null,
+                null);
+
+        if(deletedRowsCount > 0) {
+            Toast.makeText(this, String.valueOf(deletedRowsCount)+ " " +
+                    getString(R.string.message_pets_deleted), Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(this, getString(R.string.message_pets_delete_failed), Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_catalog.xml file.
@@ -113,7 +130,8 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
 
-                // Do nothing for now
+                deleteAllPets();
+
                 return true;
         }
 
